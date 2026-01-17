@@ -1,4 +1,4 @@
----
+
 
 # 📊 SQL Window Functions & Advanced Analytics Practice
 
@@ -7,7 +7,7 @@ All queries can be executed using **SQLite Online**:
 
 🔗 **SQL Editor:** [https://sqliteonline.com/](https://sqliteonline.com/)
 
----
+
 
 ## 🧠 Dataset Context
 
