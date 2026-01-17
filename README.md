@@ -11,6 +11,8 @@ All queries can be executed using **SQLite Online**:
 
 The problems are based on a **DVD Rental–style database**, involving:
 
+# Tables : 
+
 * Customers
 * Rentals
 * Payments
