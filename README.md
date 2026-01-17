@@ -1,5 +1,3 @@
-# CHECK LIST FORK MECHANISM
-
 # 📊 SQL Window Functions & Advanced Analytics Practice
 
 This repository contains a comprehensive set of **advanced SQL analytical problems** designed to practice **window functions, ranking, cumulative metrics, time-based analysis, and performance optimization**.
