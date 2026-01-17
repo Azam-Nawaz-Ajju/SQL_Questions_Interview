@@ -1438,6 +1438,26 @@ WHERE rank =1
 -- Q41: Customers who rented from every category at least once
 -- Q42: Actors whose movies generate highest revenue (movies rented >50 times)
 -- Q46: Customers who rented movies from both stores, total rentals per customer
+WITH store_1 as 
+(
+SELECT 
+    r.customer_id,
+    s.store_id,
+    count(r.rental_id) as rental_count
+
+FROM rental r 
+JOIN staff st  
+    ON r.staff_id = st.staff_id
+JOIN store s 
+    ON st.store_id = s.store_id
+GROUP BY 1,2
+)
+SELECT customer_id,
+sum(rental_count) as total_rents
+FROM store_1
+GROUP BY 1
+HAVING count(DISTINCT store_id) =2
+
 -- Q48: Customers who rented movies in ≥3 categories, count rentals per category
 -- Q49: Customers who never rented from their original store
 -- Q50: Customers who rented from only one store
