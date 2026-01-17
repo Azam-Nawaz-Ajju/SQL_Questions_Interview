@@ -1,28 +1,21 @@
+
+## Python Practice Questions : 
+
 ✅ 1. Filtering / Selection
 
 Concept: Selecting rows based on conditions
 Related Questions:
 
 List all restaurants in a specific locality.
-
 Show restaurants with rating < 3.
-
 Display restaurants with avg cost for two < $50.
-
 Find restaurants with more than 100 votes.
-
 List restaurants offering both table booking and online delivery.
-
 Show cuisines offered by restaurants in ‘Paris’.
-
 List all restaurants with ‘Cafe’ in their cuisine type.
-
 Display average rating of ‘Chinese’ cuisine restaurants.
-
 Find most common price range for restaurants in ‘London’.
-
 Calculate percentage of restaurants delivering now in each city.
-
 Calculate percentage of restaurants in each locality with rating > 4.5.
 
 ✅ 2. Aggregation (COUNT, SUM, AVG)
