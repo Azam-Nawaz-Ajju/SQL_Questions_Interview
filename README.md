@@ -1,236 +1,143 @@
-# 📊 SQL Window Functions & Advanced Analytics Practice
+✅ 1. Filtering / Selection
 
-This repository contains a comprehensive set of **advanced SQL analytical problems** designed to practice **window functions, ranking, cumulative metrics, time-based analysis, and performance optimization**.
-All queries can be executed using **SQLite Online**:
+Concept: Selecting rows based on conditions
+Related Questions:
 
-🔗 **SQL Editor:** [https://sqliteonline.com/](https://sqliteonline.com/)
+List all restaurants in a specific locality.
 
+Show restaurants with rating < 3.
 
+Display restaurants with avg cost for two < $50.
 
-## 🧠 Dataset Context
+Find restaurants with more than 100 votes.
 
-The problems are based on a **DVD Rental–style database**, involving:
+List restaurants offering both table booking and online delivery.
 
-* Customers
-* Rentals
-* Payments
-* Films
-* Categories
-* Actors
-* Stores
-* Staff
+Show cuisines offered by restaurants in ‘Paris’.
 
----
+List all restaurants with ‘Cafe’ in their cuisine type.
 
-## 📈 Section 1: Cumulative & Running Totals
+Display average rating of ‘Chinese’ cuisine restaurants.
 
-1. Calculate cumulative rental revenue for each store ordered by payment date
-2. Find running total of rentals per customer ordered by rental date
-3. Compute cumulative number of rentals per film over time
-4. Determine total revenue collected by each staff member (running total)
-5. Find running total of rentals per film category ordered by rental date
+Find most common price range for restaurants in ‘London’.
 
----
+Calculate percentage of restaurants delivering now in each city.
 
-## 📅 Section 2: Date, Time & Period Analysis
+Calculate percentage of restaurants in each locality with rating > 4.5.
 
-6. Number of rentals made each month in 2005
-7. Average rental duration per film category
-8. Customers renting in the same month across multiple years
-9. Day of the week with highest rentals
-10. Total revenue per quarter for each store
+✅ 2. Aggregation (COUNT, SUM, AVG)
 
----
+Concept: Summarizing data
+Related Questions:
+3. Count restaurants without table booking.
+8. Count restaurants in each price range.
+11. Average votes per locality.
+12. Total online delivery restaurants per city.
+16. Total number of cuisines in each country.
+17. Lowest avg cost for two in each city.
+18. Top 5 localities by restaurant count.
+20. Price range distribution in a locality.
+23. Yearly growth in new cuisines introduced.
+25. Change in table booking restaurants over years.
+27. Running total of cuisines in each city.
+28. Rank countries by total votes.
+29. Total Italian restaurants in each price range.
+30. YoY growth in avg rating.
+31. Months with highest new cuisines introduced.
+35. Trend in restaurants offering online delivery over time.
+36. MoM change in avg cost for two.
+38. Cities with highest fluctuation in restaurant counts.
 
-## 🏆 Section 3: Ranking & Top-N Analysis
+✅ 3. Grouping & GroupBy
 
-11. Rank movies by total rental count
-12. Top 3 most rented movies per store
-13. Rank customers by total spending per store
-14. Customer with most rentals each month
-15. Staff member with highest revenue per year
+Concept: Group data into categories
+Related Questions:
+8. Count restaurants in each price range.
+11. Average votes per locality.
+12. Online delivery count per city.
+13. Cities with most table booking restaurants.
+16. Total cuisines per country.
+18. Top 5 localities by count.
+21. Rank cities based on total restaurants.
+24. Top 5 cuisines by avg cost in each country.
+29. Italian restaurants per price range.
+34. Localities and their most popular cuisines.
+40. Cuisines more common in a city than national average.
 
----
+✅ 4. Sorting & Ranking
 
-## 📉 Section 4: Growth, Trends & Comparisons
+Concept: Ordering data
+Related Questions:
+9. Top 10 restaurants by rating in a country.
+13. Cities with most table booking restaurants.
+21. Rank cities by total restaurants.
+22. Localities with highest average rating (CTE).
+28. Rank countries by total votes.
+32. Rank restaurants by votes in each city (CTE).
+37. Rank localities by avg price range.
 
-16. Year-over-Year (YoY) % change in rental revenue
-17. Month-over-Month (MoM) change in rental count (last 12 months)
-18. YoY rental count change per film category
-19. Compare same-month revenue across years
-20. Revenue difference between current and previous month per store
+✅ 5. Join / Merge / Subqueries
 
----
+Concept: Combining data from multiple sources
+Related Questions:
+22. CTE to find highest average rating localities.
+32. CTE rank restaurants by votes in each city.
+40. Subquery: cuisines more common in a city than national average.
+24. Top cuisines by avg cost (requires grouping + sorting)
+34. Localities and most popular cuisines (group + aggregation)
 
-## 🔄 Section 5: Advanced Cumulative Logic
+✅ 6. Window Functions
 
-21. Cumulative revenue per customer (reset after 3 months inactivity)
-22. Cumulative rental count per store
-23. Running payment total per customer (reset yearly)
-24. Cumulative rentals per film (customers with >5 rentals)
-25. Rolling 3-month revenue per store (excluding current month)
+Concept: Ranking and running totals
+Related Questions:
+27. Running total of cuisines in each city.
+32. Rank restaurants by votes in each city.
+36. MoM change in avg cost for two (window over time)
 
----
+✅ 7. Date/Time & Trend Analysis
 
-## 👥 Section 6: Customer Behavior & Retention
+Concept: Handling dates and time-based trends
+Related Questions:
+23. Yearly growth in new cuisines introduced.
+25. Change in table booking restaurants over years.
+30. YoY growth in avg rating.
+31. Months with highest new cuisines introduced.
+35. Trend in online delivery restaurants over time.
+36. MoM change in avg cost for two.
 
-26. Customer with longest total rental duration
-27. Difference between first and last rental per customer
-28. Best revenue month per store (only growth years)
-29. Movies most rented on Fridays & Saturdays
-30. Quarter with highest revenue growth
+✅ 8. Statistical Analysis
 
----
+Concept: Standard deviation, fluctuation, percentage
+Related Questions:
+19. % of restaurants delivering now in each city.
+38. Cities with highest fluctuation in restaurant counts.
+39. % of restaurants with rating > 4.5 in each locality.
+33. Avg time between opening of new restaurants offering online delivery.
 
-## 🎬 Section 7: Movies, Categories & Inventory
+✅ 9. Top / Best / Most Common
 
-31. Rank customers within store by payments (ties allowed)
-32. Top 3 rented movies per category (dense rank)
-33. Rank customers by spending (exclude one-time renters)
-34. Most rented movie per month
-35. Rolling 6-month average rental count per category
+Concept: Mode, top N, maximum
+Related Questions:
+9. Top 10 restaurants by rating.
+15. Most common price range in London.
+18. Top 5 localities by restaurant count.
+24. Top 5 cuisines by avg cost in each country.
+26. Restaurant with biggest increase in avg cost.
+34. Localities and most popular cuisines.
+31. Months with highest new cuisines introduced.
 
----
+✅ 10. Advanced Analytics
 
-## 📊 Section 8: Store, Staff & Performance
+Concept: YOY growth, changes, trends
+Related Questions:
+23. Yearly growth in new cuisines.
+25. Change in table booking restaurants over years.
+30. YoY growth in avg rating.
+36. MoM change in avg cost for two.
+38. Cities with highest fluctuation in counts.
+33. Avg time between opening of new restaurants.
 
-36. YoY rental growth per store
-37. MoM revenue change per staff member
-38. YoY change in average rental duration per category
-39. Month with biggest rental drop across years
-40. Customer spending difference vs previous year
-
----
-
-## 🧑‍🤝‍🧑 Section 9: Customer Segmentation
-
-41. Customers renting from every category
-42. Actors generating highest rental revenue
-43. Avg revenue per customer per category (ranked)
-44. Customers renting more in last 6 months
-45. Store with highest % of one-time renters
-
----
-
-## 🏪 Section 10: Store & Cross-Store Analysis
-
-46. Customers renting from both stores
-47. Top 3 customers per store by revenue
-48. Customers renting from ≥3 categories
-49. Customers never renting from signup store
-50. Customers renting from only one store
-
----
-
-## 📦 Section 11: Inventory & Availability
-
-51. Movies never rented from a store despite inventory
-52. High-rental but low-inventory movies
-53. Film availability per store
-54. Films most frequently returned late
-55. Category with lowest return rate
-
----
-
-## 🎭 Section 12: Actor-Based Analysis
-
-56. Top 5 rented movies per actor
-57. Actors generating most revenue
-58. Actor appearing in most rented films
-59. Least-rented actor movies (past year)
-60. Actors across most categories
-
----
-
-## 👨‍💼 Section 13: Staff Analytics
-
-61. Staff member with highest total revenue
-62. Revenue per staff per store
-63. Staff handling most peak-hour rentals
-64. Store with highest repeat-customer revenue
-65. Store with highest late-fee collection
-
----
-
-## ⏱️ Section 14: Window Functions (LAG / LEAD / NTILE)
-
-66. Customers renting same actor multiple times
-67. Customers renting all store categories
-68. Revenue by decade & category
-69. Most popular category per store
-70. Store with most high-frequency customers
-71. Previous & next rental date per customer
-72. Time gap between rentals (LAG)
-73. Revenue trend using LEAD & LAG
-74. Rank films per category (DENSE_RANK)
-75. Top 3 customers per store (RANK)
----
-
-## ⚙️ Section 15: Performance & Indexing
-
-76. Top staff per month (DENSE_RANK)
-77. Rolling 3-month avg revenue per store
-78. Quartile assignment using NTILE(4)
-79. Most rented movie per month
-80. Customers inactive for last 3 months
-81. Queries benefiting from indexes
-82. Index optimization on rental_date
-83. Performance impact of indexing last_name
-84. Inventory_id indexing impact
-85. Payment_date indexing for revenue queries
-
----
-
-## 🔍 Section 16: Advanced Insights
-
-86. Previous & next rental dates per customer
-87. Customers with rental gaps >30 days
-88. Most recent & second recent rentals
-89. Rank customers per store with ties
-90. Top 3 frequent renters per store
-91. Customer loyalty segmentation
-92. Spending growth in last 6 months
-93. Repeat film rentals & time gaps
-94. First vs most recent rental per customer
-95. Customers renting in 3 consecutive months
-
----
-
-## 📌 Section 17: Final Business Insights
-
-96. Most rented movie per store vs runner-up
-97. Avg rental duration (movies with >20 rentals)
-98. Movie with highest MoM rental jump
-99. Frequently co-rented movies
-100. Previous & next rental per film per store
-101. High-demand, low-availability films
-102. Most popular category per month
-103. QoQ revenue change per movie
-104. Films rented every month in a year
-105. Store with highest % of first-time renters
-106. Top revenue staff per store
-107. Monthly rentals per staff vs previous month
-108. Staff with longest processing gap
-109. Stores with 3-month consecutive growth
-110. Staff with most late rentals
-111. Monthly revenue YoY comparison
-112. Months with rental decline %
-113. Films with major popularity growth
-114. Best revenue month per store
-115. Highest & lowest revenue months per category
-
----
-
-## 🚀 Skills Practiced
-
-* `SUM() OVER()`
-* `RANK()`, `DENSE_RANK()`
-* `LAG()`, `LEAD()`
-* `NTILE()`
-* Rolling averages
-* Time-series analysis
-* Index performance optimization
-
----
-
-⭐ **Perfect for SQL interviews, analytics portfolios, and advanced practice.**
+If you want, I can also:
+✅ create a table format for easy study
+✅ convert each question into Pandas code
+✅ make a Python cheat sheet for these concepts
