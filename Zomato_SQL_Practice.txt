@@ -1,0 +1,41 @@
+1. List all restaurants in a specific locality.
+2. Show the name and city of restaurants with a rating lower than 3.
+3. Count the number of restaurants that do not offer table booking.
+4. Display restaurants that have an average cost for two less than $50.
+5. Find restaurants with more than 100 votes.
+6. List the names of restaurants offering both table booking and online delivery.
+7. Show the cuisines offered by restaurants in 'Paris'.
+8. Count the number of restaurants in each price range.
+9. Display the top 10 restaurants by rating in a specific country.
+10. List all restaurants with 'Cafe' in their cuisine type.
+11. Calculate the average votes for restaurants in each locality.
+12. Show the total number of restaurants offering online delivery in each city.
+13. List the cities with the most restaurants offering table booking.
+14. Display the average rating of 'Chinese' cuisine restaurants.
+15. Find the most common price range for restaurants in 'London'.
+16. Show the total number of cuisines available in each country.
+17. List the restaurants with the lowest average cost for two in each city.
+18. Display the top 5 localities by the number of restaurants they have.
+19. Calculate the percentage of restaurants delivering now in each city.
+20. Show the price range distribution for restaurants in a specific locality.
+21. Rank the cities based on the total number of restaurants they have.
+22. Using a CTE, find the localities with the highest average restaurant rating.
+23. Show the yearly growth in the number of new cuisines introduced.
+24. List the top 5 cuisines by average cost for two in each country.
+25. Display the change in the number of table booking restaurants over the years.
+26. Find the restaurant with the biggest increase in average cost for two.
+27. Using window functions, calculate the running total of cuisines in each city.
+28. Rank countries by the total number of votes received by their restaurants.
+29. Show the total number of 'Italian' cuisine restaurants in each price range.
+30. Calculate the year-over-year growth in the average rating of restaurants.
+31. Identify the months with the highest number of new cuisines introduced.
+32. Using a CTE, rank restaurants by their popularity based on votes in each city.
+33. Find the average time between the opening of new restaurants offering online delivery.
+
+34. List the localities and their most popular restaurant cuisines.
+35. Show the trend in the number of restaurants offering online delivery over time.
+36. Using window functions, calculate the month-over-month change in average cost for two.
+37. Rank the localities based on the average price range of restaurants.
+38. Identify the cities with the highest fluctuation in the number of restaurants.
+39. Calculate the percentage of restaurants in each locality with a rating above 4.5.
+40. Using subqueries, list all cuisines more common in a specific city than the national average.
