@@ -1385,7 +1385,6 @@ ORDER BY days_since_prev;
 -- Q104: Films rented every month in a given year
 -- Q105: Store with highest % rentals from first-time customers
 
-SELECT * FROM customer
 -- 10. Advanced Analysis / Complex Metrics
 -- Q29: Movies most frequently rented on Fridays & Saturdays
 -- Q44: Customers renting more in last 6 months than previous 6 months
