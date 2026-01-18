@@ -1,5 +1,6 @@
 -- 1. Cumulative / Running Totals (Window Functions)
--- These involve SUM() OVER(), COUNT() OVER(), or other cumulative calculations.
+    -- These involve SUM() OVER(), COUNT() OVER(), or other cumulative calculations.
+
 -- Q1: Cumulative rental revenue for each store, ordered by payment date
 SELECT
     s.store_id,
@@ -40,15 +41,11 @@ from rental r
 join staff st on r.staff_id = st.staff_id
 join store s on st.store_id = s.store_id
 
-
-
 -- Q23: Running total of payments per customer, ordered by payment date, reset at start of year
 
 select customer_id, payment_date,
 sum(amount) over (PARTITION by customer_id, strftime('%Y', payment_date) order by payment_date) as running_total_payments
 from payment
-
-
 
 -- Q24: Cumulative rental count per film, considering customers with more than 5 rentals
 with cust_morethan_5 as 
@@ -170,7 +167,6 @@ JOIN film_category fc on i.film_id = fc.film_id
 JOIN film f on fc.film_id = f.film_id
 where return_date is NOT NULL
 group by 1;
-
 
 -- Q10: Total revenue per quarter for each store
 
@@ -377,8 +373,6 @@ yearly_rev_growth as
 ), 
 monthly_revenue AS (
     SELECT
-
-
 
 -- Q30: Total revenue per quarter and quarter with highest increase vs previous quarter
 WITH quarterly_revenue AS (
@@ -626,8 +620,6 @@ SELECT
     RANK() OVER (PARTITION BY category_id ORDER BY revenue DESC) as rank 
 FROM avg_revenue
 
-
-
 -- Q44: Customers who rented more in last 6 months than previous 6 months
 
 WITH rental_counts AS (
@@ -657,8 +649,6 @@ SELECT
 FROM rental_counts
 WHERE last_6_months > prev_6_months
 ORDER BY customer_id;
-
-
 
 -- Q68: Total revenue by movies released in each decade, broken down by category
 
@@ -701,8 +691,6 @@ FROM cus_rental
 ORDER BY cust_count DESC 
 LIMIT 1
 
-
-
 -- Q114: Month generating highest rental revenue per store
 WITH month_revenue as 
 (
@@ -732,9 +720,6 @@ SELECT store_id,
 FROM highest_revenue
 WHERE rank = 1
 ORDER BY store_id
-
-
-
 
 -- Q115: Highest and lowest revenue-generating months per category
 
@@ -773,8 +758,6 @@ FROM highest_lowest_revenue
 WHERE (higheset_rank = 1 OR lowest_rank = 1)
 ORDER BY category_id
 ;
-
-
 
 -- ========================================
 
@@ -932,8 +915,6 @@ total_spend as
 )
 SELECT customer_id, total_spend, rank
 FROM total_spend
-
-
 
 -- Q34: Most rented movie per month, ranking by rental count
 WITH rented_movies as 
@@ -1468,10 +1449,52 @@ WHERE rank =1
 
 
 -- 5. Join / Multi-Table Queries
--- Q8: Customers who rented in same month across multiple years
--- Q41: Customers who rented from every category at least once
--- Q42: Actors whose movies generate highest revenue (movies rented >50 times)
 
+-- Q8: Customers who rented in same month across multiple years
+WITH customer_months AS (
+    SELECT
+        customer_id,
+        strftime('%m', rental_date) AS rental_month,
+        strftime('%Y', rental_date) AS rental_year
+    FROM rental
+    GROUP BY customer_id, rental_month, rental_year
+)
+
+SELECT
+    customer_id,
+    rental_month,
+    COUNT(DISTINCT rental_year) AS years_rented
+FROM customer_months
+GROUP BY customer_id, rental_month
+HAVING COUNT(DISTINCT rental_year) > 1
+ORDER BY customer_id, rental_month;
+
+
+-- Q41: Customers who rented from every category at least once
+WITH category_count AS (
+    SELECT COUNT(*) AS total_categories
+    FROM category
+),
+customer_category AS (
+    SELECT
+        r.customer_id,
+        fc.category_id
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY r.customer_id, fc.category_id
+)
+
+SELECT
+    cc.customer_id
+FROM customer_category cc
+JOIN category_count c ON 1=1
+GROUP BY cc.customer_id
+HAVING COUNT(DISTINCT cc.category_id) = c.total_categories
+ORDER BY cc.customer_id;
+
+
+-- Q42: Actors whose movies generate highest revenue (movies rented >50 times)
 WITH film_rentals AS (
     SELECT
         f.film_id,
@@ -1526,30 +1549,510 @@ GROUP BY 1
 HAVING count(DISTINCT store_id) =2
 
 -- Q48: Customers who rented movies in ≥3 categories, count rentals per category
+WITH cust_cat AS (
+    SELECT
+        r.customer_id,
+        fc.category_id,
+        COUNT(*) AS rentals_in_category
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY r.customer_id, fc.category_id
+),
+cust_cat_count AS (
+    SELECT
+        customer_id,
+        COUNT(DISTINCT category_id) AS categories_rented
+    FROM cust_cat
+    GROUP BY customer_id
+    HAVING categories_rented >= 3
+)
+SELECT
+    c.customer_id,
+    c.category_id,
+    c.rentals_in_category
+FROM cust_cat c
+JOIN cust_cat_count cc ON c.customer_id = cc.customer_id
+ORDER BY c.customer_id, c.category_id;
+
 -- Q49: Customers who never rented from their original store
+WITH customer_orig AS (
+    SELECT customer_id, store_id AS original_store
+    FROM customer
+),
+cust_rented_stores AS (
+    SELECT DISTINCT
+        r.customer_id,
+        s.store_id
+    FROM rental r
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+)
+SELECT
+    co.customer_id
+FROM customer_orig co
+LEFT JOIN cust_rented_stores cr
+    ON co.customer_id = cr.customer_id
+GROUP BY co.customer_id
+HAVING SUM(CASE WHEN cr.store_id = co.original_store THEN 1 ELSE 0 END) = 0;
+
+
 -- Q50: Customers who rented from only one store
+SELECT
+    r.customer_id,
+    COUNT(DISTINCT s.store_id) AS store_count
+FROM rental r
+JOIN staff st ON r.staff_id = st.staff_id
+JOIN store s ON st.store_id = s.store_id
+GROUP BY r.customer_id
+HAVING store_count = 1;
+
+
 -- Q51: Movies in inventory but never rented from that store
+SELECT
+    i.store_id,
+    i.film_id
+FROM inventory i
+LEFT JOIN rental r
+    ON i.inventory_id = r.inventory_id
+WHERE r.rental_id IS NULL
+ORDER BY i.store_id, i.film_id;
+
+
 -- Q52: Movies rented most but with least inventory per store
+WITH store_movie_rentals AS (
+    SELECT
+        s.store_id,
+        f.film_id,
+        f.title,
+        COUNT(r.rental_id) AS rental_count
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film f ON i.film_id = f.film_id
+    JOIN store s ON i.store_id = s.store_id
+    GROUP BY s.store_id, f.film_id
+),
+store_movie_inventory AS (
+    SELECT
+        store_id,
+        film_id,
+        COUNT(*) AS inventory_count
+    FROM inventory
+    GROUP BY store_id, film_id
+),
+combined AS (
+    SELECT
+        r.store_id,
+        r.film_id,
+        r.title,
+        r.rental_count,
+        COALESCE(i.inventory_count, 0) AS inventory_count,
+        (r.rental_count * 1.0) / COALESCE(i.inventory_count, 1) AS rent_to_inv_ratio
+    FROM store_movie_rentals r
+    LEFT JOIN store_movie_inventory i
+        ON r.store_id = i.store_id AND r.film_id = i.film_id
+)
+SELECT *
+FROM combined
+ORDER BY store_id, rent_to_inv_ratio DESC
+LIMIT 1;
+
+
 -- Q53: Availability of each film per store, show store with most copies
+WITH film_inventory AS (
+    SELECT
+        store_id,
+        film_id,
+        COUNT(*) AS copies
+    FROM inventory
+    GROUP BY store_id, film_id
+),
+top_store AS (
+    SELECT
+        film_id,
+        store_id,
+        copies,
+        ROW_NUMBER() OVER (
+            PARTITION BY film_id
+            ORDER BY copies DESC
+        ) AS rank
+    FROM film_inventory
+)
+SELECT film_id, store_id, copies
+FROM top_store
+WHERE rank = 1
+ORDER BY film_id;
+
+
 -- Q54: Films returned late most, include category and actor
+WITH late_rentals AS (
+    SELECT
+        r.inventory_id,
+        i.film_id,
+        COUNT(*) AS late_count
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    WHERE r.return_date > DATE(r.rental_date, '+' || r.rental_duration || ' days')
+    GROUP BY r.inventory_id, i.film_id
+),
+film_info AS (
+    SELECT
+        f.film_id,
+        f.title,
+        fc.category_id,
+        a.actor_id,
+        a.first_name || ' ' || a.last_name AS actor_name,
+        lr.late_count
+    FROM late_rentals lr
+    JOIN film f ON lr.film_id = f.film_id
+    JOIN film_category fc ON f.film_id = fc.film_id
+    JOIN film_actor fa ON f.film_id = fa.film_id
+    JOIN actor a ON fa.actor_id = a.actor_id
+)
+SELECT *
+FROM film_info
+ORDER BY late_count DESC
+LIMIT 10;
+
+
 -- Q55: Category with lowest return rate (rental vs return count)
+WITH category_stats AS (
+    SELECT
+        fc.category_id,
+        COUNT(r.rental_id) AS rentals,
+        SUM(CASE WHEN r.return_date IS NOT NULL THEN 1 ELSE 0 END) AS returns
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY fc.category_id
+)
+SELECT
+    category_id,
+    rentals,
+    returns,
+    (returns * 1.0 / rentals) AS return_rate
+FROM category_stats
+ORDER BY return_rate ASC
+LIMIT 1;
+
+
 -- Q56: Top 5 most rented movies per actor
+WITH actor_movie_rentals AS (
+    SELECT
+        a.actor_id,
+        a.first_name || ' ' || a.last_name AS actor_name,
+        f.film_id,
+        f.title,
+        COUNT(r.rental_id) AS rental_count
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film f ON i.film_id = f.film_id
+    JOIN film_actor fa ON f.film_id = fa.film_id
+    JOIN actor a ON fa.actor_id = a.actor_id
+    GROUP BY a.actor_id, f.film_id
+),
+ranked AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY actor_id
+            ORDER BY rental_count DESC
+        ) AS rank
+    FROM actor_movie_rentals
+)
+SELECT actor_id, actor_name, film_id, title, rental_count
+FROM ranked
+WHERE rank <= 5
+ORDER BY actor_id, rank;
+
+
 -- Q57: Actors whose movies generated most rental revenue
+WITH film_revenue AS (
+    SELECT
+        i.film_id,
+        SUM(p.amount) AS revenue
+    FROM payment p
+    JOIN rental r ON p.rental_id = r.rental_id
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    GROUP BY i.film_id
+),
+actor_revenue AS (
+    SELECT
+        a.actor_id,
+        a.first_name || ' ' || a.last_name AS actor_name,
+        SUM(fr.revenue) AS total_revenue
+    FROM film_revenue fr
+    JOIN film_actor fa ON fr.film_id = fa.film_id
+    JOIN actor a ON fa.actor_id = a.actor_id
+    GROUP BY a.actor_id
+)
+SELECT *
+FROM actor_revenue
+ORDER BY total_revenue DESC
+LIMIT 10;
+
+
 -- Q58: Actor appearing in most rented films
+WITH film_rental_counts AS (
+    SELECT
+        i.film_id,
+        COUNT(r.rental_id) AS rentals
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    GROUP BY i.film_id
+),
+actor_films AS (
+    SELECT
+        a.actor_id,
+        a.first_name || ' ' || a.last_name AS actor_name,
+        COUNT(DISTINCT fa.film_id) AS films_rented
+    FROM film_rental_counts frc
+    JOIN film_actor fa ON frc.film_id = fa.film_id
+    JOIN actor a ON fa.actor_id = a.actor_id
+    GROUP BY a.actor_id
+)
+SELECT *
+FROM actor_films
+ORDER BY films_rented DESC
+LIMIT 1;
+
+
 -- Q59: Actors whose movies rented least in past year, list movies
+WITH last_year_rentals AS (
+    SELECT
+        i.film_id,
+        COUNT(r.rental_id) AS rentals
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    WHERE r.rental_date >= DATE('now', '-1 year')
+    GROUP BY i.film_id
+),
+actor_rental AS (
+    SELECT
+        a.actor_id,
+        a.first_name || ' ' || a.last_name AS actor_name,
+        f.film_id,
+        f.title,
+        COALESCE(lyr.rentals, 0) AS rentals_last_year
+    FROM film_actor fa
+    JOIN actor a ON fa.actor_id = a.actor_id
+    JOIN film f ON fa.film_id = f.film_id
+    LEFT JOIN last_year_rentals lyr ON f.film_id = lyr.film_id
+)
+SELECT *
+FROM actor_rental
+ORDER BY rentals_last_year ASC
+LIMIT 20;
+
+
 -- Q60: Actors in movies belonging to most categories
+WITH actor_categories AS (
+    SELECT
+        a.actor_id,
+        a.first_name || ' ' || a.last_name AS actor_name,
+        COUNT(DISTINCT fc.category_id) AS category_count
+    FROM film_actor fa
+    JOIN actor a ON fa.actor_id = a.actor_id
+    JOIN film_category fc ON fa.film_id = fc.film_id
+    GROUP BY a.actor_id
+)
+SELECT *
+FROM actor_categories
+ORDER BY category_count DESC
+LIMIT 10;
 
 
 
 -- 6. Staff / Store Analysis
 -- Q61: Staff with highest revenue in total rentals
+SELECT
+    p.staff_id,
+    st.first_name || ' ' || st.last_name AS staff_name,
+    SUM(p.amount) AS total_revenue
+FROM payment p
+JOIN staff st ON p.staff_id = st.staff_id
+GROUP BY p.staff_id
+ORDER BY total_revenue DESC
+LIMIT 1;
+
+
 -- Q62: Total revenue per staff, broken down by store
+SELECT
+    s.store_id,
+    p.staff_id,
+    st.first_name || ' ' || st.last_name AS staff_name,
+    SUM(p.amount) AS total_revenue
+FROM payment p
+JOIN staff st ON p.staff_id = st.staff_id
+JOIN store s ON st.store_id = s.store_id
+GROUP BY s.store_id, p.staff_id
+ORDER BY s.store_id, total_revenue DESC;
+
+
 -- Q63: Staff handling most rentals during peak hours
+WITH peak_rentals AS (
+    SELECT
+        st.staff_id,
+        st.first_name || ' ' || st.last_name AS staff_name,
+        COUNT(*) AS rental_count
+    FROM rental r
+    JOIN staff st ON r.staff_id = st.staff_id
+    WHERE CAST(strftime('%H', r.rental_date) AS INTEGER) BETWEEN 18 AND 21
+    GROUP BY st.staff_id
+)
+SELECT *
+FROM peak_rentals
+ORDER BY rental_count DESC
+LIMIT 1;
+
+
 -- Q64: Store with highest % revenue from repeat customers
+WITH customer_store_rentals AS (
+    SELECT
+        s.store_id,
+        r.customer_id,
+        COUNT(*) AS rental_count
+    FROM rental r
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    GROUP BY s.store_id, r.customer_id
+),
+repeat_customers AS (
+    SELECT
+        store_id,
+        customer_id,
+        CASE WHEN rental_count > 1 THEN 1 ELSE 0 END AS is_repeat
+    FROM customer_store_rentals
+),
+store_revenue AS (
+    SELECT
+        s.store_id,
+        SUM(p.amount) AS total_revenue
+    FROM payment p
+    JOIN rental r ON p.rental_id = r.rental_id
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    GROUP BY s.store_id
+),
+repeat_revenue AS (
+    SELECT
+        s.store_id,
+        SUM(p.amount) AS repeat_revenue
+    FROM payment p
+    JOIN rental r ON p.rental_id = r.rental_id
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    JOIN repeat_customers rc
+      ON rc.store_id = s.store_id
+     AND rc.customer_id = r.customer_id
+     AND rc.is_repeat = 1
+    GROUP BY s.store_id
+)
+SELECT
+    sr.store_id,
+    repeat_revenue * 100.0 / total_revenue AS repeat_revenue_pct
+FROM store_revenue sr
+JOIN repeat_revenue rr ON sr.store_id = rr.store_id
+ORDER BY repeat_revenue_pct DESC
+LIMIT 1;
+
+
 -- Q65: Store with highest late fee collection
+WITH late_payments AS (
+    SELECT
+        s.store_id,
+        SUM(p.amount) AS late_fees
+    FROM payment p
+    JOIN rental r ON p.rental_id = r.rental_id
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    WHERE r.return_date > DATE(r.rental_date, '+' || r.rental_duration || ' days')
+    GROUP BY s.store_id
+)
+SELECT *
+FROM late_payments
+ORDER BY late_fees DESC
+LIMIT 1;
+
+
 -- Q66: Customers renting movies featuring same actor more than once
+WITH customer_actor_rents AS (
+    SELECT
+        r.customer_id,
+        fa.actor_id,
+        COUNT(*) AS actor_rent_count
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_actor fa ON i.film_id = fa.film_id
+    GROUP BY r.customer_id, fa.actor_id
+)
+SELECT customer_id, actor_id, actor_rent_count
+FROM customer_actor_rents
+WHERE actor_rent_count > 1
+ORDER BY customer_id, actor_rent_count DESC;
+
+
 -- Q67: Customers renting movies from every category in a particular store
+WITH store_categories AS (
+    SELECT DISTINCT fc.category_id
+    FROM film_category fc
+),
+customer_store_category AS (
+    SELECT
+        r.customer_id,
+        s.store_id,
+        fc.category_id
+    FROM rental r
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY r.customer_id, s.store_id, fc.category_id
+),
+category_count AS (
+    SELECT COUNT(*) AS total_categories
+    FROM store_categories
+)
+SELECT
+    csc.customer_id,
+    csc.store_id
+FROM customer_store_category csc
+JOIN category_count cc ON 1=1
+GROUP BY csc.customer_id, csc.store_id
+HAVING COUNT(DISTINCT csc.category_id) = cc.total_categories;
+
+
 -- Q106: Staff member with highest revenue contribution per store
+WITH staff_store_revenue AS (
+    SELECT
+        s.store_id,
+        p.staff_id,
+        SUM(p.amount) AS staff_revenue
+    FROM payment p
+    JOIN staff st ON p.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    GROUP BY s.store_id, p.staff_id
+),
+staff_rank AS (
+    SELECT
+        store_id,
+        staff_id,
+        staff_revenue,
+        ROW_NUMBER() OVER (
+            PARTITION BY store_id
+            ORDER BY staff_revenue DESC
+        ) AS rank
+    FROM staff_store_revenue
+)
+SELECT
+    store_id,
+    staff_id,
+    staff_revenue
+FROM staff_rank
+WHERE rank = 1
+ORDER BY store_id;
+
+
 -- Q107: Rentals handled per staff per month, compare to previous month
 SELECT 
     p.staff_id,
@@ -1566,17 +2069,201 @@ GROUP BY p.staff_id, strftime('%Y-%m', p.payment_date)
 
 
 -- Q108: Staff member with longest gap between rentals
+WITH staff_rentals AS (
+    SELECT
+        staff_id,
+        rental_date,
+        LAG(rental_date) OVER (
+            PARTITION BY staff_id
+            ORDER BY rental_date
+        ) AS prev_rental
+    FROM rental
+),
+gaps AS (
+    SELECT
+        staff_id,
+        JULIANDAY(rental_date) - JULIANDAY(prev_rental) AS gap_days
+    FROM staff_rentals
+    WHERE prev_rental IS NOT NULL
+)
+SELECT
+    staff_id,
+    MAX(gap_days) AS longest_gap_days
+FROM gaps
+GROUP BY staff_id
+ORDER BY longest_gap_days DESC
+LIMIT 1;
+
+
 -- Q110: Staff with highest number of late rentals, compare to second-highest
+WITH late_rentals AS (
+    SELECT
+        staff_id,
+        COUNT(*) AS late_count
+    FROM rental
+    WHERE return_date > DATE(rental_date, '+' || rental_duration || ' days')
+    GROUP BY staff_id
+),
+ranked AS (
+    SELECT
+        staff_id,
+        late_count,
+        DENSE_RANK() OVER (ORDER BY late_count DESC) AS rank
+    FROM late_rentals
+)
+SELECT
+    staff_id,
+    late_count,
+    rank
+FROM ranked
+WHERE rank <= 2
+ORDER BY rank;
 
 
 
 -- 7. Analytical / Trend Calculations (YoY, MoM, Rolling Avg)
+
 -- Q16: YoY % change in rental revenue
+WITH revenue_per_year AS (
+    SELECT
+        strftime('%Y', payment_date) AS year,
+        SUM(amount) AS revenue
+    FROM payment
+    GROUP BY year
+)
+SELECT
+    year,
+    revenue,
+    LAG(revenue) OVER (ORDER BY year) AS prev_year_revenue,
+    (revenue - LAG(revenue) OVER (ORDER BY year)) * 100.0 /
+    LAG(revenue) OVER (ORDER BY year) AS yoy_pct_change
+FROM revenue_per_year
+ORDER BY year;
+
 -- Q17: MoM change in rental count last 12 months
+WITH monthly_rentals AS (
+    SELECT
+        strftime('%Y-%m', rental_date) AS month,
+        COUNT(*) AS rentals
+    FROM rental
+    WHERE rental_date >= DATE('now', '-12 months')
+    GROUP BY month
+)
+SELECT
+    month,
+    rentals,
+    LAG(rentals) OVER (ORDER BY month) AS prev_month_rentals,
+    rentals - LAG(rentals) OVER (ORDER BY month) AS mom_change
+FROM monthly_rentals
+ORDER BY month;
+
 -- Q18: YoY change in number of rentals per category
+WITH cat_year_rentals AS (
+    SELECT
+        fc.category_id,
+        strftime('%Y', r.rental_date) AS year,
+        COUNT(*) AS rentals
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY fc.category_id, year
+)
+SELECT
+    category_id,
+    year,
+    rentals,
+    LAG(rentals) OVER (
+        PARTITION BY category_id
+        ORDER BY year
+    ) AS prev_year_rentals,
+    rentals - LAG(rentals) OVER (
+        PARTITION BY category_id
+        ORDER BY year
+    ) AS yoy_change
+FROM cat_year_rentals
+ORDER BY category_id, year;
+
+
 -- Q25: Rolling 3-month total revenue per store, excluding current month
+WITH monthly_store_revenue AS (
+    SELECT
+        s.store_id,
+        strftime('%Y-%m', p.payment_date) AS month,
+        SUM(p.amount) AS revenue
+    FROM payment p
+    JOIN staff st ON p.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    GROUP BY s.store_id, month
+)
+SELECT
+    store_id,
+    month,
+    SUM(revenue) OVER (
+        PARTITION BY store_id
+        ORDER BY month
+        ROWS BETWEEN 3 PRECEDING AND 1 PRECEDING
+    ) AS rolling_3mo_revenue_excluding_current
+FROM monthly_store_revenue
+ORDER BY store_id, month;
+
+
 -- Q35: Rolling 6-month average rental count per category
+WITH monthly_cat_rentals AS (
+    SELECT
+        fc.category_id,
+        strftime('%Y-%m', r.rental_date) AS month,
+        COUNT(*) AS rentals
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY fc.category_id, month
+)
+SELECT
+    category_id,
+    month,
+    rentals,
+    AVG(rentals) OVER (
+        PARTITION BY category_id
+        ORDER BY month
+        ROWS BETWEEN 5 PRECEDING AND CURRENT ROW
+    ) AS rolling_6mo_avg
+FROM monthly_cat_rentals
+ORDER BY category_id, month;
+
+
 -- Q36: YoY % change in rentals per store, find highest growth
+WITH store_year_rentals AS (
+    SELECT
+        s.store_id,
+        strftime('%Y', r.rental_date) AS year,
+        COUNT(*) AS rentals
+    FROM rental r
+    JOIN staff st ON r.staff_id = st.staff_id
+    JOIN store s ON st.store_id = s.store_id
+    GROUP BY s.store_id, year
+),
+growth AS (
+    SELECT
+        store_id,
+        year,
+        rentals,
+        LAG(rentals) OVER (
+            PARTITION BY store_id
+            ORDER BY year
+        ) AS prev_year_rentals
+    FROM store_year_rentals
+)
+SELECT
+    store_id,
+    year,
+    rentals,
+    prev_year_rentals,
+    (rentals - prev_year_rentals) * 100.0 / prev_year_rentals AS yoy_pct_change
+FROM growth
+ORDER BY yoy_pct_change DESC
+LIMIT 1;
+
+
 -- Q37: MoM change in revenue per staff
 WITH staff_revenue as 
 (
@@ -1597,8 +2284,64 @@ SELECT
     LAG(revenue) OVER (PARTITION BY staff_id ORDER BY payment_year_month) as prev_mon_revenue,
     COALESCE((revenue - LAG(revenue) OVER (PARTITION BY staff_id ORDER BY payment_year_month)),0) as mom_change
 FROM staff_revenue
+
 -- Q38: YoY change in average rental duration per category
+WITH cat_year_avg AS (
+    SELECT
+        fc.category_id,
+        strftime('%Y', r.rental_date) AS year,
+        AVG(r.rental_duration) AS avg_duration
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    JOIN film_category fc ON i.film_id = fc.film_id
+    GROUP BY fc.category_id, year
+)
+SELECT
+    category_id,
+    year,
+    avg_duration,
+    LAG(avg_duration) OVER (
+        PARTITION BY category_id
+        ORDER BY year
+    ) AS prev_year_avg,
+    avg_duration - LAG(avg_duration) OVER (
+        PARTITION BY category_id
+        ORDER BY year
+    ) AS yoy_change
+FROM cat_year_avg
+ORDER BY category_id, year;
+
 -- Q39: Monthly rental comparison across years, biggest drop
+WITH monthly_rentals AS (
+    SELECT
+        strftime('%m', rental_date) AS month,
+        strftime('%Y', rental_date) AS year,
+        COUNT(*) AS rentals
+    FROM rental
+    GROUP BY year, month
+),
+month_comparison AS (
+    SELECT
+        month,
+        year,
+        rentals,
+        LAG(rentals) OVER (
+            PARTITION BY month
+            ORDER BY year
+        ) AS prev_year_rentals
+    FROM monthly_rentals
+)
+SELECT
+    month,
+    year,
+    rentals,
+    prev_year_rentals,
+    rentals - prev_year_rentals AS yoy_change
+FROM month_comparison
+WHERE prev_year_rentals IS NOT NULL
+ORDER BY yoy_change ASC
+LIMIT 1;
+
 -- Q40: Customer spending difference compared to previous year
 WITH cust_spend AS (
     SELECT 
@@ -1685,16 +2428,156 @@ FROM cust_spend
 
 
 -- Q92: Customers who spent more last 6 months than previous 6 months
+WITH last_6 AS (
+    SELECT
+        customer_id,
+        SUM(amount) AS spend_last_6
+    FROM payment
+    WHERE payment_date >= DATE('now', '-6 months')
+    GROUP BY customer_id
+),
+prev_6 AS (
+    SELECT
+        customer_id,
+        SUM(amount) AS spend_prev_6
+    FROM payment
+    WHERE payment_date >= DATE('now', '-12 months')
+      AND payment_date < DATE('now', '-6 months')
+    GROUP BY customer_id
+)
+
+SELECT
+    l.customer_id,
+    l.spend_last_6,
+    COALESCE(p.spend_prev_6, 0) AS spend_prev_6
+FROM last_6 l
+LEFT JOIN prev_6 p
+    ON l.customer_id = p.customer_id
+WHERE l.spend_last_6 > COALESCE(p.spend_prev_6, 0)
+ORDER BY (l.spend_last_6 - COALESCE(p.spend_prev_6, 0)) DESC;
 
 
 -- Q93: Customers renting same film multiple times, time between rentals
+WITH customer_film_rentals AS (
+    SELECT
+        r.customer_id,
+        i.film_id,
+        r.rental_date,
+        LAG(r.rental_date) OVER (
+            PARTITION BY r.customer_id, i.film_id
+            ORDER BY r.rental_date
+        ) AS prev_rental_date
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+)
+SELECT
+    customer_id,
+    film_id,
+    rental_date,
+    prev_rental_date,
+    JULIANDAY(rental_date) - JULIANDAY(prev_rental_date) AS days_between
+FROM customer_film_rentals
+WHERE prev_rental_date IS NOT NULL
+ORDER BY customer_id, film_id, rental_date;
 
 -- Q94: First and most recent rental per customer
+WITH customer_rentals AS (
+    SELECT
+        customer_id,
+        rental_date,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY rental_date
+        ) AS rn_asc,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY rental_date DESC
+        ) AS rn_desc
+    FROM rental
+)
+SELECT
+    customer_id,
+    MAX(CASE WHEN rn_asc = 1 THEN rental_date END) AS first_rental,
+    MAX(CASE WHEN rn_desc = 1 THEN rental_date END) AS most_recent_rental
+FROM customer_rentals
+GROUP BY customer_id;
+
+
 -- Q97: Avg rental duration per movie, only if rented >20 times
+WITH movie_rentals AS (
+    SELECT
+        i.film_id,
+        COUNT(*) AS rental_count,
+        AVG(r.rental_duration) AS avg_duration
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    GROUP BY i.film_id
+)
+SELECT
+    film_id,
+    avg_duration,
+    rental_count
+FROM movie_rentals
+WHERE rental_count > 20
+ORDER BY avg_duration DESC;
 
 
 -- Q100: Previous and next rental instance per film per store
+WITH film_store_rentals AS (
+    SELECT
+        i.store_id,
+        i.film_id,
+        r.rental_id,
+        r.rental_date,
+        LAG(r.rental_date) OVER (
+            PARTITION BY i.store_id, i.film_id
+            ORDER BY r.rental_date
+        ) AS prev_rental_date,
+        LEAD(r.rental_date) OVER (
+            PARTITION BY i.store_id, i.film_id
+            ORDER BY r.rental_date
+        ) AS next_rental_date
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+)
+SELECT
+    store_id,
+    film_id,
+    rental_id,
+    rental_date,
+    prev_rental_date,
+    next_rental_date
+FROM film_store_rentals
+ORDER BY store_id, film_id, rental_date;
+
+
 -- Q101: Movies with high rentals but low inventory
+WITH movie_rentals AS (
+    SELECT
+        i.film_id,
+        COUNT(*) AS rental_count
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+    GROUP BY i.film_id
+),
+movie_inventory AS (
+    SELECT
+        film_id,
+        COUNT(*) AS inventory_count
+    FROM inventory
+    GROUP BY film_id
+)
+SELECT
+    mr.film_id,
+    mr.rental_count,
+    mi.inventory_count,
+    (mr.rental_count * 1.0) / mi.inventory_count AS rental_to_inventory_ratio
+FROM movie_rentals mr
+JOIN movie_inventory mi ON mr.film_id = mi.film_id
+ORDER BY rental_to_inventory_ratio DESC
+LIMIT 20;
+
+
 -- Q102: Most popular film category per month
 WITH film_category_monthly as 
 (
@@ -1878,4 +2761,35 @@ SELECT
 FROM rental 
 
 -- Q99: Films frequently rented together by same customer
+WITH cust_day_films AS (
+    SELECT
+        r.customer_id,
+        DATE(r.rental_date) AS rent_day,
+        i.film_id
+    FROM rental r
+    JOIN inventory i ON r.inventory_id = i.inventory_id
+),
+film_pairs AS (
+    SELECT
+        c1.film_id AS film_id_1,
+        c2.film_id AS film_id_2,
+        COUNT(*) AS times_rented_together
+    FROM cust_day_films c1
+    JOIN cust_day_films c2
+        ON c1.customer_id = c2.customer_id
+       AND c1.rent_day = c2.rent_day
+       AND c1.film_id < c2.film_id
+    GROUP BY film_id_1, film_id_2
+)
+SELECT
+    fp.film_id_1,
+    f1.title AS film_title_1,
+    fp.film_id_2,
+    f2.title AS film_title_2,
+    fp.times_rented_together
+FROM film_pairs fp
+JOIN film f1 ON fp.film_id_1 = f1.film_id
+JOIN film f2 ON fp.film_id_2 = f2.film_id
+ORDER BY fp.times_rented_together DESC
+LIMIT 20;
 
