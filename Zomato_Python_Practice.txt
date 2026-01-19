@@ -1,4 +1,4 @@
-Python Exercise:
+Python Exercises: 
 
 1. List all restaurants in a specific locality.
 2. Show the name and city of restaurants with a rating lower than 3.
