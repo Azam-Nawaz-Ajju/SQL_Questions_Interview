@@ -2793,3 +2793,39 @@ JOIN film f2 ON fp.film_id_2 = f2.film_id
 ORDER BY fp.times_rented_together DESC
 LIMIT 20;
 
+
+
+Trips Table:- 
+                trip_id,
+                driver_id,
+                trip_date timestamp, 
+                status, 
+                trip_city, 
+                trip_country 
+  
+-- write a query to find out drivers who took at least 20 trips in each month for the year of 2024.
+WITH trip_count_driver as 
+(
+SELECT 
+    driver_id,
+    strftime('%Y-%m',trip_date) as trip_year_month, 
+    count(trip_id) as trip_count
+FROM trips
+WHERE strftime('%Y', trip_date) = '2024'
+GROUP BY driver_id,  strftime('%Y-%m',trip_date)
+)
+
+drivers_20_trips as 
+(
+    SELECT 
+        driver_id, 
+        trip_year_month, 
+        trip_count
+    FROM trip_count_driver
+    WHERE trip_count >= 20
+)
+SELECT 
+    driver_id
+FROM drivers_20_trips 
+GROUP BY driver_id
+HAVING COUNT(DISTINCT trip_year_month) = 12 
