@@ -12,22 +12,48 @@ All queries can be executed using **SQLite Online**:
 The problems are based on a **DVD Rental–style database**, involving:
 
 # Tables Schema: 
+# 📊 SQL Window Functions & Advanced Analytics Practice
 
--- ===============================
--- SAKILA SCHEMA (PostgreSQL)
--- ===============================
+This repository contains a **comprehensive collection of advanced SQL analytical problems** designed to strengthen your skills in:
 
+- Window functions
+- Ranking & Top-N analysis
+- Cumulative & rolling metrics
+- Time-based analysis
+- Customer behavior analytics
+- Performance tuning & indexing
+
+All queries can be executed using **SQLite Online**:
+
+🔗 **SQL Editor:** https://sqliteonline.com/
+
+---
+
+## 🧠 Dataset Context
+
+The problems are based on a **DVD Rental (Sakila-style) database**, commonly used for SQL analytics practice.
+
+The dataset includes information about:
+- Movies & categories
+- Customers & rentals
+- Payments & revenue
+- Stores, staff, inventory
+- Actors & film participation
+
+---
+
+## 🗄️ Tables Schema (PostgreSQL – Sakila)
+
+```sql
 CREATE SCHEMA IF NOT EXISTS sakila;
 SET search_path TO sakila;
 
--- COUNTRY
 CREATE TABLE country (
     country_id SMALLINT PRIMARY KEY,
     country VARCHAR(50) NOT NULL,
     last_update TIMESTAMP
 );
 
--- CITY
 CREATE TABLE city (
     city_id INT PRIMARY KEY,
     city VARCHAR(50) NOT NULL,
@@ -35,7 +61,6 @@ CREATE TABLE city (
     last_update TIMESTAMP
 );
 
--- ADDRESS
 CREATE TABLE address (
     address_id INT PRIMARY KEY,
     address VARCHAR(50),
@@ -47,14 +72,12 @@ CREATE TABLE address (
     last_update TIMESTAMP
 );
 
--- CATEGORY
 CREATE TABLE category (
     category_id SMALLINT PRIMARY KEY,
     name VARCHAR(25),
     last_update TIMESTAMP
 );
 
--- ACTOR
 CREATE TABLE actor (
     actor_id INT PRIMARY KEY,
     first_name VARCHAR(45),
@@ -62,14 +85,12 @@ CREATE TABLE actor (
     last_update TIMESTAMP
 );
 
--- LANGUAGE
 CREATE TABLE language (
     language_id SMALLINT PRIMARY KEY,
     name VARCHAR(20),
     last_update TIMESTAMP
 );
 
--- FILM
 CREATE TABLE film (
     film_id INT PRIMARY KEY,
     title VARCHAR(255),
@@ -84,7 +105,6 @@ CREATE TABLE film (
     last_update TIMESTAMP
 );
 
--- FILM_ACTOR
 CREATE TABLE film_actor (
     actor_id INT REFERENCES actor(actor_id),
     film_id INT REFERENCES film(film_id),
@@ -92,7 +112,6 @@ CREATE TABLE film_actor (
     PRIMARY KEY (actor_id, film_id)
 );
 
--- FILM_CATEGORY
 CREATE TABLE film_category (
     film_id INT REFERENCES film(film_id),
     category_id SMALLINT REFERENCES category(category_id),
@@ -100,7 +119,6 @@ CREATE TABLE film_category (
     PRIMARY KEY (film_id, category_id)
 );
 
--- CUSTOMER
 CREATE TABLE customer (
     customer_id INT PRIMARY KEY,
     store_id INT,
@@ -113,7 +131,6 @@ CREATE TABLE customer (
     last_update TIMESTAMP
 );
 
--- INVENTORY
 CREATE TABLE inventory (
     inventory_id INT PRIMARY KEY,
     film_id INT REFERENCES film(film_id),
@@ -121,7 +138,6 @@ CREATE TABLE inventory (
     last_update TIMESTAMP
 );
 
--- RENTAL
 CREATE TABLE rental (
     rental_id INT PRIMARY KEY,
     rental_date TIMESTAMP,
@@ -132,7 +148,6 @@ CREATE TABLE rental (
     last_update TIMESTAMP
 );
 
--- PAYMENT
 CREATE TABLE payment (
     payment_id INT PRIMARY KEY,
     customer_id INT REFERENCES customer(customer_id),
@@ -141,7 +156,6 @@ CREATE TABLE payment (
     amount NUMERIC(5,2),
     payment_date TIMESTAMP
 );
-
 
 ---
 
